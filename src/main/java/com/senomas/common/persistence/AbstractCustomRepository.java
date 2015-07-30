@@ -23,17 +23,24 @@ public abstract class AbstractCustomRepository {
 	
 	protected <T> Page<T> findWithSpecification(EntityManager entityManager, Pageable pageable, Filter<T> filter, Class<T> type) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Long> cqTotal = builder.createQuery(Long.class);
-		Root<T> root = cqTotal.from(type);
-		Predicate predicate = filter.toPredicate(root, cqTotal, builder);
-		if (predicate != null) cqTotal.where(predicate);
-		cqTotal.select(builder.count(root));
-		long total = entityManager.createQuery(cqTotal).getSingleResult();
+		long total;
+		{
+			CriteriaQuery<Long> cqTotal = builder.createQuery(Long.class);
+			Root<T> root = cqTotal.from(type);
+			if (filter != null) {
+				Predicate predicate = filter.toPredicate(root, cqTotal, builder);
+				if (predicate != null) cqTotal.where(predicate);
+			}
+			cqTotal.select(builder.count(root));
+			total = entityManager.createQuery(cqTotal).getSingleResult();
+		}
 		
 		CriteriaQuery<T> cq = builder.createQuery(type);
-		root = cqTotal.from(type);
-		predicate = filter.toPredicate(root, cq, builder);
-		if (predicate != null) cqTotal.where(predicate);
+		Root<T> root = cq.from(type);
+		if (filter != null) {
+			Predicate predicate = filter.toPredicate(root, cq, builder);
+			if (predicate != null) cq.where(predicate);
+		}
 		cq.select(root);
 		if (pageable.getSort() != null) {
 			List<Order> orders = new LinkedList<Order>();
@@ -57,18 +64,21 @@ public abstract class AbstractCustomRepository {
 	
 	protected <T, T1, T2> Page<T> findJoinWithSpecification(EntityManager entityManager, Pageable pageable, FilterJoin<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Long> cqTotal = builder.createQuery(Long.class);
-		Root<T1> root1 = cqTotal.from(type1);
-		Root<T2> root2 = cqTotal.from(type2);
-		Predicate predicate = specification.toPredicate(root1, root2, cqTotal, builder);
-		if (predicate != null) cqTotal.where(predicate);
-		cqTotal.select(builder.count(root1));
-		long total = entityManager.createQuery(cqTotal).getSingleResult();
+		long total;
+		{
+			CriteriaQuery<Long> cqTotal = builder.createQuery(Long.class);
+			Root<T1> root1 = cqTotal.from(type1);
+			Root<T2> root2 = cqTotal.from(type2);
+			Predicate predicate = specification.toPredicate(root1, root2, cqTotal, builder);
+			if (predicate != null) cqTotal.where(predicate);
+			cqTotal.select(builder.count(root1));
+			total = entityManager.createQuery(cqTotal).getSingleResult();
+		}
 		
 		CriteriaQuery<T> cq = builder.createQuery(type);
-		root1 = cq.from(type1);
-		root2 = cq.from(type2);
-		predicate = specification.toPredicate(root1, root2, cq, builder);
+		Root<T1> root1 = cq.from(type1);
+		Root<T2> root2 = cq.from(type2);
+		Predicate predicate = specification.toPredicate(root1, root2, cq, builder);
 		if (predicate != null) cq.where(predicate);
 		cq.select(specification.getSelection(root1, root2, cq, builder));
 		if (pageable.getSort() != null) {
