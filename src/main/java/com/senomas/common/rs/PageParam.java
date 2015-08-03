@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort.Order;
 public class PageParam {
 	int page;
 	int size;
+	String requestId;
 	String orders[];
 	
 	public int getPage() {
@@ -28,6 +29,14 @@ public class PageParam {
 	
 	public void setSize(int size) {
 		this.size = size;
+	}
+	
+	public String getRequestId() {
+		return requestId;
+	}
+	
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
 	}
 
 	public String[] getOrders() {

@@ -13,15 +13,13 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.senomas.common.U;
 
 public abstract class AbstractCustomRepository {
 	
-	protected <T> Page<T> findWithSpecification(EntityManager entityManager, Pageable pageable, Filter<T> filter, Class<T> type) {
+	protected <T> PageRequestId<T> findWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, Filter<T> filter, Class<T> type) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		long total;
 		{
@@ -59,10 +57,10 @@ public abstract class AbstractCustomRepository {
 		}
 		TypedQuery<T> qry = entityManager.createQuery(cq);
 		qry.setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
-		return new PageImpl<T>(qry.getResultList(), pageable, total);
+		return new PageRequestIdImpl<T>(qry.getResultList(), pageable, total, requestId);
 	}
 	
-	protected <T, T1, T2> Page<T> findJoinWithSpecification(EntityManager entityManager, Pageable pageable, FilterJoin<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
+	protected <T, T1, T2> PageRequestId<T> findJoinWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, FilterJoin<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		long total;
 		{
@@ -105,7 +103,7 @@ public abstract class AbstractCustomRepository {
 		}
 		TypedQuery<T> qry = entityManager.createQuery(cq);
 		qry.setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
-		return new PageImpl<T>(qry.getResultList(), pageable, total);
+		return new PageRequestIdImpl<T>(qry.getResultList(), pageable, total, requestId);
 	}
 
 }
