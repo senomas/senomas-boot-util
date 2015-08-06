@@ -60,6 +60,47 @@ public abstract class AbstractCustomRepository {
 		return new PageRequestIdImpl<T>(qry.getResultList(), pageable, total, requestId);
 	}
 	
+	protected <T, T1> PageRequestId<T> findWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, Filter2<T, T1> filter, Class<T> type, Class<T1> type1) {
+		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+		long total;
+		{
+			CriteriaQuery<Long> cqTotal = builder.createQuery(Long.class);
+			Root<T1> root = cqTotal.from(type1);
+			if (filter != null) {
+				Predicate predicate = filter.toPredicate(root, cqTotal, builder);
+				if (predicate != null) cqTotal.where(predicate);
+			}
+			cqTotal.select(builder.count(root));
+			total = entityManager.createQuery(cqTotal).getSingleResult();
+		}
+		
+		CriteriaQuery<T> cq = builder.createQuery(type);
+		Root<T1> root = cq.from(type1);
+		if (filter != null) {
+			Predicate predicate = filter.toPredicate(root, cq, builder);
+			if (predicate != null) cq.where(predicate);
+		}
+		cq.select(filter.getSelection(root, cq, builder));
+		if (pageable.getSort() != null) {
+			List<Order> orders = new LinkedList<Order>();
+			for (Iterator<org.springframework.data.domain.Sort.Order> itr = pageable.getSort().iterator(); itr.hasNext(); ) {
+				org.springframework.data.domain.Sort.Order order = itr.next();
+				String sx[] = order.getProperty().split("\\.");
+				Path<Object> p = root.get(sx[0]);
+				for (int i=1, il=sx.length; i<il; i++) p = p.get(sx[i]);
+				if (order.isAscending()) {
+					orders.add(builder.asc(p));
+				} else {
+					orders.add(builder.desc(p));
+				}
+			}
+			cq.orderBy(orders);
+		}
+		TypedQuery<T> qry = entityManager.createQuery(cq);
+		qry.setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
+		return new PageRequestIdImpl<T>(qry.getResultList(), pageable, total, requestId);
+	}
+	
 	protected <T, T1, T2> PageRequestId<T> findJoinWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, FilterJoin<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		long total;
