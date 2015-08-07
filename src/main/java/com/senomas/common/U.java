@@ -17,6 +17,7 @@ import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.Key;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -42,10 +43,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.w3c.dom.Node;
 
 public abstract class U {
-    protected static final char[] hexArray = "0123456789ABCDEF".toCharArray();
+    protected static final char[] hexArray = "0123456789abcdef".toCharArray();
+    private static final char CHARZ[] = "qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray();
+    
     private static final int MAX_DUMP_DEPTH = 10;
     public static SecretKey cryptKey;
     public static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final SecureRandom rnd = new SecureRandom();
 
     static {
         byte[] iv = new byte[] {
@@ -69,6 +73,24 @@ public abstract class U {
             if (t.equals(v)) return true;
         }
         return false;
+    }
+    
+    public static String randomText(int len) {
+    	char cz[] = new char[len];
+    	int CZL = CHARZ.length;
+    	for (int i=0; i<len; i++) {
+    		cz[i] = CHARZ[rnd.nextInt(CZL)];
+    	}
+    	return new String(cz);
+    }
+
+    public static String randomHex(int len) {
+    	char cz[] = new char[len];
+    	int CZL = hexArray.length;
+    	for (int i=0; i<len; i++) {
+    		cz[i] = hexArray[rnd.nextInt(CZL)];
+    	}
+    	return new String(cz);
     }
 
     public static byte[] getBytes(String str) {
@@ -108,23 +130,9 @@ public abstract class U {
             int x = b[i];
             if (x < 0) x += 256;
             int d = (x / 16) & 0xF;
-            sb.append((char) (d < 10 ? d + '0' : d + 'a' - 10));
+            sb.append(hexArray[d]);
             d = x & 0xF;
-            sb.append((char) (d < 10 ? d + '0' : d + 'a' - 10));
-        }
-        return sb.toString();
-    }
-
-    public static String toHexUpperCase(byte b[], int offset, int length) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = offset, il = Math.min(b.length, offset + length); i < il; i++) {
-            // if (i != offset) sb.append(' ');
-            int x = b[i];
-            if (x < 0) x += 256;
-            int d = (x / 16) & 0xF;
-            sb.append((char) (d < 10 ? d + '0' : d + 'A' - 10));
-            d = x & 0xF;
-            sb.append((char) (d < 10 ? d + '0' : d + 'A' - 10));
+            sb.append(hexArray[d]);
         }
         return sb.toString();
     }
