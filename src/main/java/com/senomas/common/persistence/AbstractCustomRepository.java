@@ -101,7 +101,7 @@ public abstract class AbstractCustomRepository {
 		return new PageRequestIdImpl<T>(qry.getResultList(), pageable, total, requestId);
 	}
 	
-	protected <T, T1, T2> PageRequestId<T> findJoinWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, FilterJoin<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
+	protected <T, T1, T2> PageRequestId<T> findWithSpecification(String requestId, EntityManager entityManager, Pageable pageable, Filter3<T, T1, T2> specification, Class<T> type, Class<T1> type1, Class<T2> type2) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		long total;
 		{
